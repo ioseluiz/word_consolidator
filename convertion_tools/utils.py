@@ -1,6 +1,8 @@
 import os
 import win32com.client as win32
 import win32com.client.makepy
+import winerror
+from win32com.client.dynamic import ERRORS_BAD_CONTEXT
 import fitz # PyMuPDF
 
 from pdf2docx import parse
@@ -81,18 +83,22 @@ def merge_pdf_files(target_folder):
         print(f"Error during PDF merge: {e}")
         
 def convert_pdf_to_word(target_folder):
+    global ERRORS_BAD_CONTEXT
+    ERRORS_BAD_CONTEXT.append(winerror.E_NOTIMPL)
     pdf_file = os.path.join(target_folder, "merged_file.pdf")
     pdf_file = os.path.abspath(pdf_file)
     word_file = os.path.join(target_folder, "merged_file.docx")
     word_file = os.path.abspath(word_file)
     win32com.client.makepy.GenerateFromTypeLibSpec('Acrobat')
     adobe = win32.DispatchEx('AcroExch.App')
-    avDoc = win32.DispatchEx('AcroExch.AVDoc')
+    avDoc = win32.Dispatch('AcroExch.AVDoc')
     avDoc.Open(pdf_file, pdf_file)
+    assert(avDoc)
     pdDoc = avDoc.GetPDDoc()
     jObject = pdDoc.GetJSObject()
     jObject.SaveAs(word_file, "com.adobe.acrobat.docx")
     avDoc.Close(-1)
+    adobe.Exit()
     
         
             
